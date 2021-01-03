@@ -1,0 +1,117 @@
+
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Battle Ship - VueJS</title>
+    <meta charset="utf-8">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@100&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="node_modules/sweetalert2/dist/sweetalert2.min.css" />
+</head>
+  <body>
+
+    <div id="games">
+        <div class="games-title">
+            Battle Ship
+            <br/>
+            <span v-if="!isDesignMode">Status : move {{ countMove }} miss {{ countMiss }}  <br/></span>
+            {{ message }} : {{ endpoint }}
+            <span v-if="isDesignMode"> <br/> Select 2 area to deploy ship</span>
+            
+        </div>
+        <div class="games-board" v-if="isDesignMode">
+            <div class="games-sq"
+                v-for="(sq, index) in boards"
+                v-on:click="designBoard(index)"
+                >
+                <span class="overlayNumber">{{ index }}</span>
+                <!-- <img v-if="sq.isBomb" class="bomb animate__animated animate__fadeOut"  src="images/bomb.png"> -->
+                <img v-if="sq.isShip" src="images/ship2.jpg">
+                <span v-if="sq.available">+</span>
+
+                
+            </div>
+        </div>
+        <div class="games-board" v-if="!isDesignMode" >
+            <div class="games-sq"
+                v-for="(sq, index) in boards"
+                v-on:click="deployBomb(index)"
+                >
+                <span v-if="!sq.place" class="overlayNumber">{{ index }}</span>
+                <img v-if="sq.isBomb" class="bomb animate__animated animate__fadeOut"  src="images/bomb.png">
+                <img v-if="!sq.isShip && sq.place" src="images/wave.jpg">
+                <img v-if="sq.isShip && sq.place" src="images/ship2.jpg">
+            </div>
+        </div>
+        <button v-if="isDesignMode && shipAlreadyDeploySlotCount == shipDeploySlotCount" v-on:click="submitDesign()" type="button">Submit Design</button>
+        <button v-if="isDesignMode " v-on:click="clearDesign()" type="button">Clear Design</button>
+        <button v-if=" winner != null " v-on:click="clearDesign()" type="button">Restart</button>
+        <p v-html="result" class="anotation">
+        </p>
+    </div>
+    <script src="https://unpkg.com/vue"></script>
+
+    <script src="js/square.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/boardgames.js"></script>
+    <script src="node_modules/sweetalert2/dist/sweetalert2.min.js"></script>
+    <script src="node_modules/vue-simple-alert/lib/index.js"></script>
+    <script>
+        // import VueSimpleAlert from "vue-simple-alert";
+        // var VueSimpleAlert = require("vue-simple-alert");
+        var board = new BoardGames();
+        Vue.use(VueSimpleAlert);
+        var vue = new Vue({
+            el: '#games',
+            data: board,
+            created() {
+                this.$alert("Start games by Designing Battle Board");
+            },
+            methods: {
+                designBoard(index) {
+                    if(board.boards[index].available == false){
+                        board.result += `Cannot Mark Ship at ${index} <br/>`;
+                    }else {
+                        board.result += `Mark Ship at ${index} <br/>`;
+                        board.designBoard(index)
+                    }
+                    
+                },
+
+                deployBomb(index) {
+                    board.result += `Deploy Bomb at ${index} <br/>`;
+                    let result = board.deployBomb(index)
+                    this.checkWinner();
+                },
+
+                checkWinner() {
+                    if(board.winner != null ) {
+                        this.$alert("All Ships Destroy");
+                        board.result += `All Ships Destroy <br/>`;
+                    }
+                },
+
+                markRandom() {
+                    let index = Math.floor(Math.random() * Math.floor(25));
+                    designBoard(index);
+                },
+
+                submitDesign() {
+                    board.submitDesign()
+                    if( board.isDesignMode == false ) {
+                        this.$alert("Start Battle Mode");
+                    }
+                },
+
+                clearDesign() {
+                    board.clearDesign()
+                }
+            }
+        })
+
+        
+    </script>
+  </body>
+</html>
